@@ -24,8 +24,8 @@ keywords = [
     "assembly modeling", "mold design", "solidworks", "autocad", 
     "autodesk inventor", "catia", "siemens nx", "ptc creo", "rhino", 
     "blender", "fusion 360", "freecad", "onshape", "openscad", "zbrush", 
-    "3ds max", "maya", "parasolid", "acis", "sat", "sab", "u3d", "pdf 3d", 
-    "collada", "dae", "gltf", "glb", "ply"
+    "3ds max", "maya", "parasolid", "acis", "u3d", "pdf 3d", 
+    "collada", "gltf",
 ]
 
 def send_email(keyword, site_name, url):
