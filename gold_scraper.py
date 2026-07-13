@@ -25,28 +25,33 @@ def run():
         report = "🌟 Tajseed o Tajweed - مکمل مارکیٹ رپورٹ\n"
         report += "==========================================\n\n"
         
-        # 1. گولڈ ریٹس کا مین ٹیبل (تصویر والا پہلا حصہ)
-        report += "--- گولڈ ریٹس (وزن اور کیرٹ) ---\n"
-        main_table = soup.find('table')
-        if main_table:
-            report += main_table.get_text(separator=' | ', strip=True) + "\n\n"
+        # 1. گولڈ ریٹ چارٹ (وزن اور کیرٹ)
+        report += "--- گولڈ ریٹ چارٹ (وزن اور کیرٹ) ---\n"
+        gold_table = soup.find('table')
+        if gold_table:
+            # اب ہر سیل کے بعد ایک نئی لائن آئے گی تاکہ ڈیٹا بکھر نہ جائے
+            report += gold_table.get_text(separator='\t', strip=True) + "\n\n"
         
-        # 2. 15 دن کا مکمل ٹرینڈ
-        report += "--- گزشتہ 15 دن کا ٹرینڈ (مکمل) ---\n"
+        # 2. 15 دن کا ٹرینڈ (ٹیبل فارمیٹ میں)
+        report += "--- گزشتہ 15 دنوں کا ٹرینڈ ---\n"
         history_wrap = soup.find('div', class_='progress-table-wrap')
         if history_wrap:
-            report += history_wrap.get_text(separator=' ', strip=True) + "\n\n"
+            rows = history_wrap.find_all('div', class_='table-row')
+            for row in rows:
+                # ہر کالم کے درمیان ایک ٹیب (Tab) کا فاصلہ
+                report += row.get_text(separator='\t', strip=True) + "\n"
 
-        # 3. سلور اور گولڈ پوریٹی ڈیٹیلز (تصویر کا آخری حصہ)
-        report += "--- سلور اور گولڈ پوریٹی (معیار) ---\n"
+        # 3. پوریٹی ڈیٹیلز
+        report += "\n--- سلور اور گولڈ پوریٹی (معیار) ---\n"
         purity_div = soup.find('div', class_='text14')
         if purity_div:
+            # یہاں بھی ہر پوائنٹ الگ لائن میں آئے گا
             report += purity_div.get_text(separator='\n', strip=True)
 
         report += "\n\nتازہ ترین اپڈیٹ: Gold.pk | Tajseed o Tajweed"
         
         send_email(report)
-        print("مکمل رپورٹ کامیابی سے بھیج دی گئی ہے۔")
+        print("رپورٹ کامیابی سے بھیج دی گئی ہے۔")
             
     except Exception as e:
         print(f"Error: {e}")
