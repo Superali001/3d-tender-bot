@@ -22,7 +22,7 @@ keywords = [
     "3d scanner", "cnc machining", "industrial design", 
     "prototyping", "metal casting", "jewelry design",
     "product development", "die making", "precision engineering"
-    "cad", "cam", "cae", "cnc", "3d design", "3d modeling", 
+    "cad", "cae", "cnc", "3d design", "3d modeling", 
     "3d model making", "3d printing", "3d scanner", "cnc machining", 
     "industrial design", "prototyping", "metal casting", "jewelry design", 
     "product development", "die making", "precision engineering", "reverse engineering", 
