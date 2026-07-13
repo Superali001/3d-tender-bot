@@ -1,106 +1,122 @@
-import requests
+Import requests
+
 from bs4 import BeautifulSoup
+
 import smtplib
+
 import os
+
 from email.message import EmailMessage
 
-def send_email(html_report):
+
+
+def send_email(report):
+
     msg = EmailMessage()
+
     msg['Subject'] = "📊 Tajseed o Tajweed - مکمل مارکیٹ رپورٹ"
+
     msg['From'] = "superali001@gmail.com"
+
     msg['To'] = "superali001@gmail.com"
-    
-    msg.add_alternative(html_report, subtype='html')
-    
+
+    msg.set_content(report)
+
     password = os.environ.get('EMAIL_PASSWORD')
+
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+
         smtp.login("superali001@gmail.com", password)
+
         smtp.send_message(msg)
 
+
+
 def run():
+
     url = "https://gold.pk/"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
+
+    headers = {'User-Agent': 'Mozilla/5.0'}
+
     try:
-        response = requests.get(url, headers=headers, timeout=30)
+
+        response = requests.get(url, headers=headers, timeout=20)
+
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # پریمیم بزنس لک کے لیے CSS اسٹائلنگ
-        html_content = """
-        <html>
-        <head>
-        <style>
-            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-            .wrapper { max-width: 850px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 6px solid #d4af37; }
-            .brand-header { text-align: center; border-bottom: 2px solid #f1f1f1; padding-bottom: 15px; margin-bottom: 25px; }
-            .brand-header h1 { color: #d4af37; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
-            .brand-header p { color: #666; margin: 5px 0 0 0; font-size: 14px; }
-            h2 { color: #2c3e50; font-size: 16px; border-left: 4px solid #d4af37; padding-left: 10px; margin-top: 35px; margin-bottom: 15px; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 14px; }
-            th { background-color: #f8f9fa; color: #333; font-weight: 600; text-align: left; border: 1px solid #e9ecef; padding: 12px 10px; }
-            td { border: 1px solid #e9ecef; padding: 12px 10px; text-align: left; color: #495057; }
-            tr:nth-child(even) { background-color: #fafafa; }
-            .footer { text-align: center; border-top: 1px solid #eee; padding-top: 15px; margin-top: 35px; font-size: 12px; color: #999; }
-        </style>
-        </head>
-        <body>
-        <div class="wrapper">
-            <div class="brand-header">
-                <h1>🌟 TAJSEED O TAJWEED</h1>
-                <p>روزانہ لائیو گولڈ اور سلور مارکیٹ رپورٹ</p>
-            </div>
-        """
 
-        # 1. شہروں کے لائیو ریٹس (Major Cities)
-        html_content += "<h2>1. شہروں کے لائیو گولڈ ریٹس (Major Cities)</h2>"
-        html_content += "<table><thead><tr><th>Top City</th><th>Symbol</th><th>Bidding</th><th>Asking</th></tr></thead><tbody>"
         
-        tables = soup.find_all('div', class_='progress-table')
-        if tables:
-            city_rows = tables[0].find_all('div', class_='table-row')
-            for row in city_rows:
-                cols = [div.get_text(strip=True) for div in row.find_all('div', recursive=False)]
-                # ہیڈر یا لائیو ریٹس بینر فلٹر
-                if not cols or "Top City" in cols[0] or "Gold Rates" in cols[0] or "XAUP" in "".join(cols):
-                    continue
-                if len(cols) >= 4:
-                    html_content += f"<tr><td>{cols[0]}</td><td>{cols[1]}</td><td>{cols[2]}</td><td>{cols[3]}</td></tr>"
-        html_content += "</tbody></table>"
 
-        # 2. گزشتہ 15 دن کا ٹرینڈ (Historical Trend)
-        html_content += "<h2>2. گزشتہ 15 دنوں کا مارکیٹ ٹرینڈ (Daily Gold Rates)</h2>"
-        html_content += "<table><thead><tr><th>Date</th><th>Closing Rate</th><th>Day High</th><th>Day Low</th></tr></thead><tbody>"
-        
-        history_wrap = soup.find('div', class_='progress-table-wrap')
-        target_history = history_wrap if history_wrap else (tables[1] if len(tables) > 1 else None)
-        
-        if target_history:
-            history_rows = target_history.find_all('div', class_='table-row')
-            for row in history_rows:
-                cols = [div.get_text(strip=True) for div in row.find_all('div', recursive=False)]
-                if not cols or "Date" in cols[0] or "Gold Rates" in cols[0] or "XAUP" in "".join(cols):
-                    continue
-                if len(cols) >= 4:
-                    html_content += f"<tr><td>{cols[0]}</td><td>{cols[1]}</td><td>{cols[2]}</td><td>{cols[3]}</td></tr>"
-        html_content += "</tbody></table>"
+        report = "🌟 Tajseed o Tajweed - مکمل گولڈ اور سلور رپورٹ\n"
 
-        # فوٹر
-        html_content += """
-            <div class="footer">
-                <p>یہ رپورٹ خودکار نظام کے تحت تیار کی گئی ہے۔ ڈیٹا کا ماخذ: Gold.pk</p>
-                <p>&copy; 2026 Tajseed o Tajweed. All Rights Reserved.</p>
-            </div>
-        </div>
-        </body>
-        </html>
-        """
+        report += "==========================================\n\n"
+
         
-        send_email(html_content)
-        print("کامیابی: بالکل کلین اور مختصر HTML رپورٹ بھیج دی گئی ہے۔")
+
+        # 1. گولڈ ریٹس
+
+        report += "--- گولڈ ریٹس (24K) ---\n"
+
+        rates = soup.find_all('p', class_='goldratehome')
+
+        if len(rates) >= 3:
+
+            report += f"1 Tola: {rates[0].get_text()}\n10 Gram: {rates[1].get_text()}\n1 Gram: {rates[2].get_text()}\n\n"
+
+        
+
+        # 2. سلور ریٹس
+
+        report += "--- سلور ریٹس (چاندی) ---\n"
+
+        table = soup.find_all('div', class_='progress-table')
+
+        if len(table) > 0:
+
+            rows = table[0].find_all('div', class_='table-row')
+
+            for row in rows:
+
+                if "Silver" in row.get_text():
+
+                    report += row.get_text(separator=' | ', strip=True) + "\n"
+
+        
+
+        # 3. گزشتہ 15 دن کا ڈیٹا
+
+        report += "\n--- گزشتہ 15 دن کا ٹرینڈ (خلاصہ) ---\n"
+
+        history_table = soup.find('div', class_='progress-table-wrap')
+
+        if history_table:
+
+            # ہم صرف پہلی چند لائنیں لیں گے تاکہ ای میل بہت لمبی نہ ہو
+
+            report += "تاریخ | کلوزنگ ریٹ\n"
+
+            report += "------------------------\n"
+
+            report += history_table.get_text(separator=' ', strip=True)[:300] + "..."
+
+
+
+        report += "\n\nتازہ ترین اپڈیٹ: Gold.pk"
+
+        
+
+        send_email(report)
+
+        print("مکمل رپورٹ کامیابی سے بھیج دی گئی ہے۔")
+
             
+
     except Exception as e:
-        print(f"Error processing layout: {e}")
+
+        print(f"Error: {e}")
+
+
 
 if __name__ == "__main__":
-    run()
+
+    run() 
+
