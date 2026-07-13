@@ -1,32 +1,44 @@
 import requests
-from bs4 import BeautifulSoup
 import smtplib
 import os
 from email.message import EmailMessage
 
 def run():
-    session = requests.Session()
-    # ایک مکمل کروم براؤزر کے ہیڈرز
+    # ہم ویب سائٹ کو ایک اصلی موبائل براؤزر کا دھوکہ دیں گے
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Referer': 'https://www.google.com/'
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
     }
     
+    url = "https://gold.pk/"
+    
     try:
-        # پہلے ہوم پیج کو وزٹ کریں تاکہ کوکیز سیٹ ہوں
-        session.get('https://gold.pk/', headers=headers)
-        # پھر ڈیٹا حاصل کریں
-        response = session.get('https://gold.pk/', headers=headers, timeout=30)
+        # ویب سائٹ کو "کھولنا" (Get Request)
+        response = requests.get(url, headers=headers, timeout=30)
         
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # تلاش کریں کہ کیا واقعی ٹیکسٹ موجود ہے
-        print(f"Content length: {len(response.text)}")
-        
-        # اگر اب بھی خالی ہے، تو مجھے بتائیں، ہم ایک اور "ڈائریکٹ" لنک ٹرائی کریں گے۔
-        # یہاں وہ سارا پرانا لاجک لکھیں جو ہم نے ٹیبل نکالنے کے لیے بنایا تھا
-        
+        # ڈیٹا کو اس کے اصل HTML سے پکڑنا
+        if "Rs." in response.text:
+            # یہاں ہم صرف وہ حصہ ڈھونڈیں گے جہاں ریٹس لکھے ہوتے ہیں
+            start = response.text.find("Gold Rate in Pakistan")
+            data = response.text[start:start+2000] # صرف کام کا حصہ
+            
+            # ای میل بھیجنا
+            msg = EmailMessage()
+            msg['Subject'] = "📊 Tajseed o Tajweed - Gold Rates"
+            msg['From'] = "superali001@gmail.com"
+            msg['To'] = "superali001@gmail.com"
+            msg.set_content("آج کا ریٹ:\n\n" + data)
+            
+            password = os.environ.get('EMAIL_PASSWORD')
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+                smtp.login("superali001@gmail.com", password)
+                smtp.send_message(msg)
+            print("ڈیٹا ریڈ کر کے ای میل کر دیا گیا ہے!")
+        else:
+            print("ویب سائٹ نے ڈیٹا نہیں دیا، صرف HTML ملا ہے۔")
+            
     except Exception as e:
         print(f"Error: {e}")
 
