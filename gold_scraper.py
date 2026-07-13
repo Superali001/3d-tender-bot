@@ -1,51 +1,34 @@
 import requests
+from bs4 import BeautifulSoup
 import smtplib
 import os
 from email.message import EmailMessage
 
-def send_email(report):
-    msg = EmailMessage()
-    msg['Subject'] = "📊 Tajseed o Tajweed - Gold Rates Report"
-    msg['From'] = "superali001@gmail.com"
-    msg['To'] = "superali001@gmail.com"
-    msg.set_content(report)
-    password = os.environ.get('EMAIL_PASSWORD')
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login("superali001@gmail.com", password)
-        smtp.send_message(msg)
-
 def run():
-    # Gold.pk کا اصل ڈیٹا سورس
-    url = "https://gold.pk/api/gold_rates" 
+    session = requests.Session()
+    # ایک مکمل کروم براؤزر کے ہیڈرز
     headers = {
-        'User-Agent': 'Mozilla/5.0',
-        'Referer': 'https://gold.pk/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Referer': 'https://www.google.com/'
     }
     
     try:
-        response = requests.get(url, headers=headers, timeout=20)
-        data = response.json()
+        # پہلے ہوم پیج کو وزٹ کریں تاکہ کوکیز سیٹ ہوں
+        session.get('https://gold.pk/', headers=headers)
+        # پھر ڈیٹا حاصل کریں
+        response = session.get('https://gold.pk/', headers=headers, timeout=30)
         
-        report = "🌟 Tajseed o Tajweed - Gold & Market Rates\n"
-        report += "==========================================\n\n"
-        report += f"{'شہر':<15} | {'ریٹ (Rs.)':<10}\n"
-        report += "-" * 35 + "\n"
-
-        # ڈیٹا میں سے شہر اور قیمت نکالنا
-        for entry in data.get('rates', []):
-            city = entry.get('city', 'N/A')
-            price = entry.get('price', '0')
-            report += f"{city:<15} | {price:<10}\n"
-
-        report += "\nتازہ ترین ریٹس: Gold.pk API سے حاصل کردہ۔"
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        send_email(report)
-        print("کامیاب! ڈیٹا ای میل کر دیا گیا ہے۔")
-            
+        # تلاش کریں کہ کیا واقعی ٹیکسٹ موجود ہے
+        print(f"Content length: {len(response.text)}")
+        
+        # اگر اب بھی خالی ہے، تو مجھے بتائیں، ہم ایک اور "ڈائریکٹ" لنک ٹرائی کریں گے۔
+        # یہاں وہ سارا پرانا لاجک لکھیں جو ہم نے ٹیبل نکالنے کے لیے بنایا تھا
+        
     except Exception as e:
         print(f"Error: {e}")
-        # اگر API سے ڈیٹا نہ ملے تو کم از کم ویب سائٹ کا ٹیکسٹ ہی بھیج دو
-        print("API ناکام، متبادل طریقہ استعمال کیا جا رہا ہے۔")
 
 if __name__ == "__main__":
     run()
