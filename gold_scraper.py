@@ -18,58 +18,58 @@ def send_email(subject, report):
 
 def run():
     url = "https://gold.pk/"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
+    headers = {'User-Agent': 'Mozilla/5.0'}
     
-    # 1. نیٹ ورک ٹیسٹ (اگر سائٹ ڈاؤن ہو تو 3 بار کوشش کرے)
-    for attempt in range(3):
-        try:
-            response = requests.get(url, headers=headers, timeout=30)
-            if response.status_code == 200: break
-        except:
-            time.sleep(5)
-    else:
-        send_email("⚠️ ALERT: Gold.pk سے رابطہ نہیں ہو رہا", "سسٹم نے ویب سائٹ تک رسائی کی کوشش کی لیکن ناکام رہا۔")
-        return
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        report = "🌟 Tajseed o Tajweed - مکمل گولڈ مارکیٹ رپورٹ\n"
+        report += "==================================================\n\n"
 
-    soup = BeautifulSoup(response.text, 'html.parser')
-    report = "🌟 Tajseed o Tajweed - مکمل گولڈ مارکیٹ رپورٹ\n"
-    report += "==================================================\n\n"
+        # 1. گولڈ ریٹس (24K)
+        report += "--- گولڈ ریٹس (24K) ---\n"
+        rates = soup.find_all('p', class_='goldratehome')
+        if len(rates) >= 3:
+            report += f"1 Tola: {rates[0].text}\n10 Gram: {rates[1].text}\n1 Gram: {rates[2].text}\n\n"
 
-    # 2. لائیو گولڈ اور سلور ریٹس
-    report += "--- لائیو مارکیٹ ریٹس ---\n"
-    report += f"{'Metal':<12} | {'Bid':<10} | {'Ask':<10}\n"
-    report += "-" * 35 + "\n"
-    rows = soup.find_all('div', class_='table-row')
-    for row in rows:
-        cols = row.find_all('div')
-        if len(cols) >= 4 and ("Gold" in cols[0].get_text() or "Silver" in cols[0].get_text()):
-            report += f"{cols[0].get_text():<12} | {cols[2].get_text():<10} | {cols[3].get_text():<10}\n"
+        # 2. مارکیٹ اور 15 دن کا ٹرینڈ (ٹیبلز کو الگ الگ تلاش کرنا)
+        all_tables = soup.find_all('div', class_='progress-table')
+        
+        # پہلا ٹیبل مارکیٹ ریٹس کا ہوتا ہے
+        report += "--- مارکیٹ ریٹس (بڈنگ / آسکنگ) ---\n"
+        if len(all_tables) > 0:
+            rows = all_tables[0].find_all('div', class_='table-row')
+            for row in rows:
+                cols = row.find_all('div')
+                if len(cols) >= 3:
+                    report += f"{cols[0].text.strip()} | {cols[2].text.strip()} | {cols[3].text.strip()}\n"
 
-    # 3. گزشتہ 15 دن کا ٹرینڈ
-    report += "\n--- گزشتہ 15 دنوں کا ٹرینڈ (24K) ---\n"
-    report += f"{'تاریخ':<12} | {'کلوزنگ ریٹ':<10}\n"
-    report += "-" * 25 + "\n"
-    for row in rows:
-        cols = row.find_all('div')
-        # صرف وہی روز شامل ہوں جن میں تاریخ لکھی ہو
-        if len(cols) > 2 and any(month in cols[0].get_text() for month in ["Jul", "Jun"]):
-            report += f"{cols[0].get_text():<12} | {cols[1].get_text():<10}\n"
+        # 15 دن کا ٹرینڈ (یہ عموماً دوسرے یا تیسرے ٹیبل میں ہوتا ہے)
+        report += "\n--- گزشتہ 15 دنوں کا ٹرینڈ ---\n"
+        if len(all_tables) > 1:
+            rows = all_tables[1].find_all('div', class_='table-row')
+            for row in rows:
+                cols = row.find_all('div')
+                if len(cols) >= 3 and "Date" not in cols[0].text:
+                    report += f"{cols[0].text.strip()} | {cols[1].text.strip()}\n"
 
-    # 4. پوریٹی (معیار) کی تفصیلات
-    report += "\n--- گولڈ اور سلور پوریٹی چارٹ ---\n"
-    purity_div = soup.find('div', class_='text14')
-    if purity_div:
-        full_text = purity_div.get_text(separator='\n', strip=True)
-        # 24K سے نیچے والا حصہ پوریٹی کے لیے نکالیں
-        if "24 Karat" in full_text:
-            report += full_text[full_text.find("24 Karat"):]
+        # 3. پوریٹی (معیار) کی تفصیلات
+        report += "\n--- گولڈ اور سلور پوریٹی (معیار) ---\n"
+        # پوریٹی کا سیکشن 'text14' کلاس میں ہے
+        purity_div = soup.find('div', class_='text14')
+        if purity_div:
+            # ہم صرف 24K سے نیچے کا حصہ کاپی کر رہے ہیں
+            text = purity_div.text
+            start = text.find("24 Karat")
+            if start != -1:
+                report += text[start:]
 
-    report += "\n\nتازہ ترین اپڈیٹ: " + time.strftime("%d %b %Y, %H:%M") + " PST\n"
-    report += "Tajseed o Tajweed - آپ کا بااعتماد جیولری پارٹنر"
-
-    # رپورٹ ای میل کریں
-    send_email("📊 Tajseed o Tajweed - ڈیلی مارکیٹ رپورٹ", report)
-    print("کامیاب: رپورٹ بھیج دی گئی ہے۔")
+        send_email("📊 Tajseed o Tajweed - ڈیلی مارکیٹ رپورٹ", report)
+        print("رپورٹ کامیابی سے بھیج دی گئی ہے۔")
+            
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     run()
