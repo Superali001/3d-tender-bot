@@ -33,7 +33,7 @@ def run():
         soup = BeautifulSoup(response.text, 'html.parser')
         report = "📊 گولڈ اور مارکیٹ ریٹس اپڈیٹ (Gold.pk):\n\n"
         
-        tables = soup.find_all('table')
+        report = soup.find(id='gold').get_text(separator='\n', strip=True)
         print(f"Total tables found: {len(tables)}") # یہ لاگ میں بتائے گا کہ کتنے ٹیبل ملے
         
         data_found = False
