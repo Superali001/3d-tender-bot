@@ -1,0 +1,21 @@
+name: Gold Rate Scraper
+on:
+  schedule:
+    - cron: '0 8 * * *'
+    - cron: '0 14 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with: {python-version: '3.9'}
+      - run: pip install requests beautifulsoup4
+      - name: Run script
+        env:
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python gold_scraper.py
