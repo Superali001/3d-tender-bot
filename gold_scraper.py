@@ -6,7 +6,7 @@ from email.message import EmailMessage
 
 def send_email(report):
     msg = EmailMessage()
-    msg['Subject'] = "📈 Gold & Market Rates Update (Gold.pk)"
+    msg['Subject'] = "📈 Gold Rate Update (Gold.pk)"
     msg['From'] = "superali001@gmail.com"
     msg['To'] = "superali001@gmail.com"
     msg.set_content(report)
@@ -21,23 +21,30 @@ def run():
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         response = requests.get(url, headers=headers, timeout=20)
-        # پورے پیج کے ٹیکسٹ کو صاف کر کے نکالیں
-        text = response.text
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # اگر آپ صرف لاہور کا ریٹ چاہتے ہیں تو یہ طریقہ سب سے بہترین ہے
-        report = "📊 Gold Rates Update (Gold.pk):\n\n"
+        # ویب سائٹ کے اہم حصے کو ٹارگٹ کرنا
+        report = "📊 گولڈ مارکیٹ ریٹس - تازہ ترین:\n\n"
         
-        # ہم ویب سائٹ کے 'Today Gold Prices' والے سیکشن کو ٹارگٹ کریں گے
-        import re
-        # یہ ریگولر ایکسپریشن (Regex) سیدھے ریٹس اٹھائے گی
-        rates = re.findall(r"Gold Rate in Lahore.*?Rs\.\s*([\d,]+)", text, re.DOTALL)
+        # تمام ٹیبل روز کو ڈھونڈ کر ان کا ڈیٹا نکالنا
+        for row in soup.find_all('tr'):
+            cols = row.find_all('td')
+            if len(cols) >= 3:
+                # شہر اور ریٹ کا ٹیکسٹ صاف کرنا
+                city = cols[0].get_text(strip=True)
+                price = cols[2].get_text(strip=True)
+                if city and price and price.isdigit(): # یہ صرف وہی لائنیں لے گا جہاں قیمت موجود ہے
+                    report += f"• {city}: Rs. {price}\n"
         
-        if rates:
-            report += f"• Lahore Gold Rate: Rs. {rates[0]}"
+        # اگر رپورٹ میں ڈیٹا آیا تو بھیج دیں
+        if len(report) > 50:
             send_email(report)
-            print("ریٹ کامیابی سے ای میل کر دیے گئے ہیں۔")
+            print("ای میل کامیابی سے بھیج دی گئی ہے۔")
         else:
-            print("ریٹس نہیں مل سکے۔")
+            print("ڈیٹا نہیں مل سکا، براہِ کرم چیک کریں کہ ٹیبلز صحیح لوڈ ہو رہے ہیں۔")
             
     except Exception as e:
         print(f"Error: {e}")
+
+if __name__ == "__main__":
+    run()
