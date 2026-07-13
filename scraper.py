@@ -25,7 +25,7 @@ keywords = [
     "autodesk inventor", "catia", "siemens nx", "ptc creo", "rhino", 
     "blender", "fusion 360", "freecad", "onshape", "openscad", "zbrush", 
     "3ds max", "maya", "parasolid", "acis", "u3d", "pdf 3d", 
-    "collada", "gltf",
+    "collada", "gltf", "render",
 ]
 
 def send_email(keyword, site_name, url):
