@@ -6,11 +6,10 @@ from email.message import EmailMessage
 
 def send_email(report):
     msg = EmailMessage()
-    msg['Subject'] = "📈 Gold Rate Data (Debug Mode)"
+    msg['Subject'] = "📈 مکمل گولڈ اور سلور اپڈیٹ (Gold.pk)"
     msg['From'] = "superali001@gmail.com"
     msg['To'] = "superali001@gmail.com"
     msg.set_content(report)
-    
     password = os.environ.get('EMAIL_PASSWORD')
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login("superali001@gmail.com", password)
@@ -23,15 +22,19 @@ def run():
         response = requests.get(url, headers=headers, timeout=20)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # اس بار ہم تلاش نہیں کر رہے، بلکہ تمام ٹیبلز کو ایک ایک کر کے پرنٹ کر رہے ہیں
-        report = "📊 تمام ٹیبل کا ڈیٹا:\n\n"
+        # تمام ڈیٹا کو ایک صاف رپورٹ میں جمع کرنا
+        report = "📊 تازہ ترین گولڈ اور سلور ریٹس رپورٹ\n\n"
         
-        for i, table in enumerate(soup.find_all('table')):
-            report += f"\n--- ٹیبل نمبر {i+1} ---\n"
-            report += table.get_text(separator=' ', strip=True)
+        # تمام ٹیبلز کو ایک ایک کر کے پڑھنا
+        tables = soup.find_all('table')
+        for i, table in enumerate(tables):
+            report += f"\n--- سیکشن {i+1} ---\n"
+            report += table.get_text(separator=' | ', strip=True)
+            report += "\n"
         
+        report += "\n\nسورس: https://gold.pk/"
         send_email(report)
-        print("ڈیٹا پرنٹ ہو گیا ہے، اپنی ای میل چیک کریں۔")
+        print("رپورٹ کامیابی سے ای میل کر دی گئی ہے۔")
             
     except Exception as e:
         print(f"Error: {e}")
