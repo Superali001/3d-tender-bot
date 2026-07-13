@@ -53,14 +53,6 @@ def generate_email_body(live_table, history_table):
                 html += f"<tr><td>{'</td><td>'.join(cols[:4])}</td></tr>"
         html += "</table>"
     
-    # 2. گزشتہ 15 دن کا ٹرینڈ
-    if history_table:
-        html += "<h3>گزشتہ 15 دنوں کا ٹرینڈ</h3><table>"
-        for row in history_table.find_all('div', class_='table-row'):
-            cols = [div.get_text(strip=True) for div in row.find_all('div', recursive=False)]
-            if cols and "Date" not in cols[0]:
-                html += f"<tr><td>{'</td><td>'.join(cols[:4])}</td></tr>"
-        html += "</table>"
         
     html += "</body></html>"
     return html
