@@ -4,44 +4,78 @@ import smtplib
 import os
 from email.message import EmailMessage
 
-# 1. ویب سائٹس کی لسٹ
+# 1. سرکاری اور پرائیویٹ ویب سائٹس
 targets = [
     {"url": "https://epms.ppra.gov.pk/public/tenders/active-tenders", "name": "PPRA_Federal"},
     {"url": "https://ppra.punjab.gov.pk/tenders", "name": "PPRA_Punjab"},
     {"url": "https://epads.punjab.gov.pk/open-opportunities/", "name": "EPADS_Punjab"},
-    {"url": "https://www.pitb.gov.pk/tenders", "name": "PITB_Tenders"}
+    {"url": "https://www.pitb.gov.pk/tenders", "name": "PITB_Tenders"},
+    {"url": "https://kppra.gov.pk/tenders", "name": "KPPRA_KPK"},
+    {"url": "https://sppra.org.pk/tenders", "name": "SPPRA_Sindh"},
+    {"url": "https://www.nha.gov.pk/tenders/", "name": "NHA_National_Highway"},
+    {"url": "https://tenders.pk/tenders/all", "name": "Tenders_PK_Private"}
 ]
 
-# 2. آپ کے کام کے مطابق کی ورڈز
+# 2. آپ کے فائنل پروفیشنل کی ورڈز
 keywords = [
-    "3d modeling", "3d printing", "cad cam", "industrial design", 
-    "cnc", "prototyping", "3d scanner", "digital design"
+    "cad cam", "3d design", "3d modeling", "3d model making", "3d printing", 
+    "3d scanner", "cnc machining", "industrial design", 
+    "prototyping", "metal casting", "jewelry design", 
+    "product development", "die making", "precision engineering"
 ]
 
-# 3. ای میل بھیجنے کا فنکشن
 def send_email(keyword, site_name, url):
     msg = EmailMessage()
-    msg['Subject'] = f"Alert: New 3D Design Tender - {keyword}"
+    msg['Subject'] = f"🚀 HIGH-VALUE ALERT: {keyword.upper()}"
     msg['From'] = "superali001@gmail.com"
     msg['To'] = "superali001@gmail.com"
-    msg.set_content(f"توجہ فرمائیں! نیا ٹینڈر ملا ہے:\n\nکی ورڈ: {keyword}\nویب سائٹ: {site_name}\nلنک: {url}")
     
-    # GitHub Secret سے پاس ورڈ لے رہا ہے
-    password = os.environ.get('EMAIL_PASSWORD')
-    
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login("superali001@gmail.com", password)
-        smtp.send_message(msg)
+    body = f"""
+==================================================
+🚀 NEW OPPORTUNITY FOUND | TAJSEED O TAJWEED 🚀
+==================================================
 
-# 4. مین سکریپنگ لوپ
-for target in targets:
+🎯 MATCHED SPECIALIZATION: {keyword.upper()}
+🌐 SOURCE PLATFORM: {site_name}
+
+🔗 DIRECT ACCESS LINK:
+{url}
+
+--------------------------------------------------
+💡 PROFESSIONAL NOTE: 
+This is a targeted alert for your design & 
+manufacturing services. Please review the 
+specifications at the link above.
+--------------------------------------------------
+System Status: Automatic Monitoring Active
+==================================================
+"""
+    msg.set_content(body)
+    
     try:
-        response = requests.get(target["url"], timeout=15)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        text = soup.get_text().lower()
-        
-        for k in keywords:
-            if k in text:
-                send_email(k, target['name'], target['url'])
+        password = os.environ.get('EMAIL_PASSWORD')
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login("superali001@gmail.com", password)
+            smtp.send_message(msg)
     except Exception as e:
-        print(f"Error checking {target['name']}: {e}")
+        print(f"Failed to send email: {e}")
+
+def run_scraper():
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    
+    for target in targets:
+        try:
+            response = requests.get(target["url"], headers=headers, timeout=25)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                text = soup.get_text().lower()
+                
+                for k in keywords:
+                    if k in text:
+                        send_email(k, target['name'], target['url'])
+                        break 
+        except Exception as e:
+            print(f"Error accessing {target['name']}: {e}")
+
+if __name__ == "__main__":
+    run_scraper()
