@@ -18,28 +18,44 @@ def send_email(report):
 
 def run():
     url = "https://gold.pk/"
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    # ہم نے براؤزر کا ہیڈر تبدیل کیا ہے تاکہ ویب سائٹ بلاک نہ کرے
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
     try:
         response = requests.get(url, headers=headers, timeout=20)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        print(f"Website Status Code: {response.status_code}") # یہ لاگ میں دکھائے گا کہ ویب سائٹ اوپن ہوئی یا نہیں
         
-        # Gold.pk کا ڈیٹا ڈھونڈنا
+        if response.status_code != 200:
+            print("ویب سائٹ نے ریکویسٹ بلاک کر دی ہے۔")
+            return
+
+        soup = BeautifulSoup(response.text, 'html.parser')
         report = "📊 گولڈ اور مارکیٹ ریٹس اپڈیٹ (Gold.pk):\n\n"
         
-        # ویب سائٹ کے ٹیبلز سے ڈیٹا نکالنا
-        for table in soup.find_all('table'):
+        tables = soup.find_all('table')
+        print(f"Total tables found: {len(tables)}") # یہ لاگ میں بتائے گا کہ کتنے ٹیبل ملے
+        
+        data_found = False
+        for table in tables:
             for row in table.find_all('tr'):
                 cols = row.find_all('td')
                 if len(cols) >= 2:
                     key = cols[0].get_text(strip=True)
                     value = cols[1].get_text(strip=True)
-                    report += f"• {key}: {value}\n"
+                    if key and value:
+                        report += f"• {key}: {value}\n"
+                        data_found = True
         
         report += "\nسورس: https://gold.pk/"
         
-        if len(report) > 100:
+        if data_found:
             send_email(report)
             print("ڈیٹا کامیابی سے ای میل کر دیا گیا ہے۔")
+        else:
+            print("ویب سائٹ سے کوئی ریٹ یا ٹیبل کا ڈیٹا نہیں مل سکا۔")
+            # اگر ڈیٹا نہیں ملا تو ہم چیک کرنے کے لیے ویب سائٹ کا کچھ حصہ پرنٹ کر رہے ہیں
+            print("Website text preview:", response.text[:300])
             
     except Exception as e:
         print(f"Error: {e}")
