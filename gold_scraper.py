@@ -18,14 +18,29 @@ def send_email(report):
 
 def run():
     url = "https://www.goldrateupdate.com/"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         response = requests.get(url, headers=headers, timeout=20)
         soup = BeautifulSoup(response.text, 'html.parser')
-        # یہاں آپ ویب سائٹ کا ڈیٹا نکال رہے ہیں
-        title = soup.title.string if soup.title else "Gold Update"
-        report = f"Gold Rate Update: {title} \n\nDirect Link: {url} \n\nSystem successfully fetched latest rates."
+        
+        # ٹیبل کا ڈیٹا تلاش کریں
+        table = soup.find('table')
+        rows = table.find_all('tr')
+        
+        report = "📊 Gold Rate Update (Lahore Gold)\n\n"
+        
+        # ٹیبل کی ہر لائن کو پڑھیں
+        for row in rows:
+            cols = row.find_all('td')
+            if len(cols) == 2:
+                name = cols[0].get_text(strip=True)
+                val = cols[1].get_text(strip=True)
+                report += f"• {name}: {val}\n"
+        
+        report += "\nلنک: https://www.goldrateupdate.com/"
         send_email(report)
+        print("Data sent successfully!")
+        
     except Exception as e:
         print(f"Error: {e}")
 
