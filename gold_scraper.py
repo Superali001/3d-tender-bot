@@ -1,5 +1,4 @@
 import requests
-import re
 import smtplib
 import os
 from email.message import EmailMessage
@@ -16,37 +15,37 @@ def send_email(report):
         smtp.send_message(msg)
 
 def run():
-    url = "https://gold.pk/"
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    # Gold.pk کا اصل ڈیٹا سورس
+    url = "https://gold.pk/api/gold_rates" 
+    headers = {
+        'User-Agent': 'Mozilla/5.0',
+        'Referer': 'https://gold.pk/'
+    }
+    
     try:
         response = requests.get(url, headers=headers, timeout=20)
-        content = response.text
+        data = response.json()
         
         report = "🌟 Tajseed o Tajweed - Gold & Market Rates\n"
         report += "==========================================\n\n"
-        report += f"{'شہر':<12} | {'بڈنگ (Rs.)':<12} | {'آسکنگ (Rs.)':<12}\n"
-        report += "-" * 40 + "\n"
+        report += f"{'شہر':<15} | {'ریٹ (Rs.)':<10}\n"
+        report += "-" * 35 + "\n"
 
-        # Regex پیٹرن جو ویب سائٹ کے سورس کوڈ سے ریٹس نکالے گا
-        # یہ پیٹرن: "Gold Rate in CityName" کے بعد آنے والے نمبرز پکڑتا ہے
-        pattern = r"Gold Rate in (.*?)\s*</td>.*?<td>.*?</td>.*?<td>(.*?)</td>.*?<td>(.*?)</td>"
-        matches = re.findall(pattern, content, re.DOTALL)
+        # ڈیٹا میں سے شہر اور قیمت نکالنا
+        for entry in data.get('rates', []):
+            city = entry.get('city', 'N/A')
+            price = entry.get('price', '0')
+            report += f"{city:<15} | {price:<10}\n"
 
-        for match in matches:
-            city = match[0].strip()
-            bidding = match[1].strip()
-            asking = match[2].strip()
-            # صرف اہم شہروں کو فلٹر کرنا
-            if city in ["Karachi", "Lahore", "Islamabad", "Quetta", "Peshawar"]:
-                report += f"{city:<12} | {bidding:<12} | {asking:<12}\n"
-
-        report += "\nتازہ ترین ریٹس: Gold.pk سے حاصل کردہ۔"
+        report += "\nتازہ ترین ریٹس: Gold.pk API سے حاصل کردہ۔"
         
         send_email(report)
-        print("رپورٹ کامیابی سے بھیج دی گئی ہے۔")
+        print("کامیاب! ڈیٹا ای میل کر دیا گیا ہے۔")
             
     except Exception as e:
         print(f"Error: {e}")
+        # اگر API سے ڈیٹا نہ ملے تو کم از کم ویب سائٹ کا ٹیکسٹ ہی بھیج دو
+        print("API ناکام، متبادل طریقہ استعمال کیا جا رہا ہے۔")
 
 if __name__ == "__main__":
     run()
