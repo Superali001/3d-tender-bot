@@ -1,9 +1,8 @@
 name: Gold Rate Scraper
 on:
   schedule:
-    - cron: '0 8 * * *'
-    - cron: '0 14 * * *'
-    - cron: '0 20 * * *'
+    - cron: '0 9 * * *'  # صبح 9 بجے
+    - cron: '0 21 * * *' # رات 9 بجے
   workflow_dispatch:
 
 jobs:
