@@ -18,7 +18,7 @@ targets = [
 
 # 2. آپ کے فائنل پروفیشنل کی ورڈز
 keywords = [
-    "cad cam", "cad", "3d design", "3d modeling", "3d model making", 
+    "cad cam", "3d design", "3d modeling", "3d model making", 
     "surface modeling", "parametric design", "generative design", 
     "geometric modeling", "solid modeling", "wireframe modeling", 
     "assembly modeling", "mold design", "solidworks", "autocad", 
