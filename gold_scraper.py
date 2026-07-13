@@ -6,7 +6,7 @@ from email.message import EmailMessage
 
 def send_email(report):
     msg = EmailMessage()
-    msg['Subject'] = "📈 Daily Gold Rate Update"
+    msg['Subject'] = "📈 Gold & Market Rates Update (Gold.pk)"
     msg['From'] = "superali001@gmail.com"
     msg['To'] = "superali001@gmail.com"
     msg.set_content(report)
@@ -17,30 +17,30 @@ def send_email(report):
         smtp.send_message(msg)
 
 def run():
-    url = "https://www.goldrateupdate.com/"
+    url = "https://gold.pk/"
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         response = requests.get(url, headers=headers, timeout=20)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # ٹیبل کا ڈیٹا تلاش کریں
-        table = soup.find('table')
-        rows = table.find_all('tr')
+        # Gold.pk کا ڈیٹا ڈھونڈنا
+        report = "📊 گولڈ اور مارکیٹ ریٹس اپڈیٹ (Gold.pk):\n\n"
         
-        report = "📊 Gold Rate Update (Lahore Gold)\n\n"
+        # ویب سائٹ کے ٹیبلز سے ڈیٹا نکالنا
+        for table in soup.find_all('table'):
+            for row in table.find_all('tr'):
+                cols = row.find_all('td')
+                if len(cols) >= 2:
+                    key = cols[0].get_text(strip=True)
+                    value = cols[1].get_text(strip=True)
+                    report += f"• {key}: {value}\n"
         
-        # ٹیبل کی ہر لائن کو پڑھیں
-        for row in rows:
-            cols = row.find_all('td')
-            if len(cols) == 2:
-                name = cols[0].get_text(strip=True)
-                val = cols[1].get_text(strip=True)
-                report += f"• {name}: {val}\n"
+        report += "\nسورس: https://gold.pk/"
         
-        report += "\nلنک: https://www.goldrateupdate.com/"
-        send_email(report)
-        print("Data sent successfully!")
-        
+        if len(report) > 100:
+            send_email(report)
+            print("ڈیٹا کامیابی سے ای میل کر دیا گیا ہے۔")
+            
     except Exception as e:
         print(f"Error: {e}")
 
