@@ -1,20 +1,27 @@
 name: Gold Rate Scraper
+
 on:
   schedule:
     - cron: '0 8 * * *'  # صبح 8 بجے
     - cron: '0 20 * * *' # رات 8 بجے
-  workflow_dispatch:
+  workflow_dispatch:      # دستی طور پر چلانے کے لیے
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Set up Python
         uses: actions/setup-python@v4
-        with: {python-version: '3.9'}
-      - run: pip install requests beautifulsoup4
-      - name: Run script
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+          
+      - name: Run gold_scraper.py
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python gold_scraper.py
