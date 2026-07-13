@@ -20,7 +20,7 @@ targets = [
 keywords = [
     "cad cam", "3d design", "3d modeling", "3d model making", "3d printing", 
     "3d scanner", "cnc machining", "industrial design", 
-    "prototyping", "metal casting", "jewelry design", 
+    "prototyping", "metal casting", "jewelry design", "tender",
     "product development", "die making", "precision engineering"
 ]
 
