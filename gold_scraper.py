@@ -4,39 +4,52 @@ import smtplib
 import os
 from email.message import EmailMessage
 
-def run():
-    # اس بار ہم ہیڈر کو مکمل براؤزر جیسا بنا رہے ہیں
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9'
-    }
-    url = "https://gold.pk/"
+def send_email(report):
+    msg = EmailMessage()
+    msg['Subject'] = "📊 Tajseed o Tajweed - Gold Rates Report"
+    msg['From'] = "superali001@gmail.com"
+    msg['To'] = "superali001@gmail.com"
+    msg.set_content(report)
     
+    password = os.environ.get('EMAIL_PASSWORD')
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login("superali001@gmail.com", password)
+        smtp.send_message(msg)
+
+def run():
+    url = "https://gold.pk/"
+    headers = {'User-Agent': 'Mozilla/5.0'}
     try:
-        response = requests.get(url, headers=headers, timeout=30)
-        soup = BeautifulSoup(response.content, 'html.parser')
+        response = requests.get(url, headers=headers, timeout=20)
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # ویب سائٹ کے مرکزی ڈیٹا والے حصے (Container) کو ڈھونڈنا
-        content = soup.get_text(separator='\n', strip=True)
+        # برانڈ نیم اور ہیڈر
+        report = "🌟 Tajseed o Tajweed - Gold & Market Rates\n"
+        report += "========================================\n\n"
         
-        # اگر ٹیکسٹ بہت چھوٹا ہے تو اس کا مطلب ڈیٹا نہیں ملا
-        if len(content) < 500:
-            print("ڈیٹا نہیں ملا - ویب سائٹ نے بلاک کر دیا ہے۔")
-            return
-
-        # ای میل بھیجنا
-        msg = EmailMessage()
-        msg['Subject'] = "📈 مکمل گولڈ ریٹس رپورٹ"
-        msg['From'] = "superali001@gmail.com"
-        msg['To'] = "superali001@gmail.com"
-        msg.set_content(content[:4000]) # صرف 4000 الفاظ تک ای میل بھیجیں گے
+        # شہروں کے ریٹس کا ٹیبل نکالنا
+        report += f"{'شہر':<15} | {'بڈنگ (Rs.)':<12} | {'آسکنگ (Rs.)':<12}\n"
+        report += "-" * 45 + "\n"
         
-        password = os.environ.get('EMAIL_PASSWORD')
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login("superali001@gmail.com", password)
-            smtp.send_message(msg)
-        print("کامیاب!")
-
+        # ویب سائٹ کے ٹیبل سے ڈیٹا تلاش کرنا
+        rows = soup.find_all('tr')
+        cities = ['Karachi', 'Lahore', 'Islamabad', 'Quetta', 'Peshawar']
+        
+        for row in rows:
+            cols = row.find_all('td')
+            if len(cols) >= 3:
+                city_name = cols[0].get_text(strip=True)
+                # صرف ہمارے مطلوبہ شہروں کو فلٹر کرنا
+                if any(city in city_name for city in cities):
+                    bidding = cols[2].get_text(strip=True)
+                    asking = cols[3].get_text(strip=True)
+                    report += f"{city_name.replace('Gold Rate in ', ''):<15} | {bidding:<12} | {asking:<12}\n"
+        
+        report += "\nتازہ ترین ریٹس: Gold.pk سے حاصل کردہ۔"
+        
+        send_email(report)
+        print("ٹیبل فارمیٹ میں رپورٹ کامیابی سے بھیج دی گئی ہے۔")
+            
     except Exception as e:
         print(f"Error: {e}")
 
