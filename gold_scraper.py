@@ -6,7 +6,7 @@ from email.message import EmailMessage
 
 def send_email(report):
     msg = EmailMessage()
-    msg['Subject'] = "📈 Gold Rate Update (Gold.pk)"
+    msg['Subject'] = "📈 Gold Rate Data (Debug Mode)"
     msg['From'] = "superali001@gmail.com"
     msg['To'] = "superali001@gmail.com"
     msg.set_content(report)
@@ -23,25 +23,15 @@ def run():
         response = requests.get(url, headers=headers, timeout=20)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # ویب سائٹ کے اہم حصے کو ٹارگٹ کرنا
-        report = "📊 گولڈ مارکیٹ ریٹس - تازہ ترین:\n\n"
+        # اس بار ہم تلاش نہیں کر رہے، بلکہ تمام ٹیبلز کو ایک ایک کر کے پرنٹ کر رہے ہیں
+        report = "📊 تمام ٹیبل کا ڈیٹا:\n\n"
         
-        # تمام ٹیبل روز کو ڈھونڈ کر ان کا ڈیٹا نکالنا
-        for row in soup.find_all('tr'):
-            cols = row.find_all('td')
-            if len(cols) >= 3:
-                # شہر اور ریٹ کا ٹیکسٹ صاف کرنا
-                city = cols[0].get_text(strip=True)
-                price = cols[2].get_text(strip=True)
-                if city and price and price.isdigit(): # یہ صرف وہی لائنیں لے گا جہاں قیمت موجود ہے
-                    report += f"• {city}: Rs. {price}\n"
+        for i, table in enumerate(soup.find_all('table')):
+            report += f"\n--- ٹیبل نمبر {i+1} ---\n"
+            report += table.get_text(separator=' ', strip=True)
         
-        # اگر رپورٹ میں ڈیٹا آیا تو بھیج دیں
-        if len(report) > 50:
-            send_email(report)
-            print("ای میل کامیابی سے بھیج دی گئی ہے۔")
-        else:
-            print("ڈیٹا نہیں مل سکا، براہِ کرم چیک کریں کہ ٹیبلز صحیح لوڈ ہو رہے ہیں۔")
+        send_email(report)
+        print("ڈیٹا پرنٹ ہو گیا ہے، اپنی ای میل چیک کریں۔")
             
     except Exception as e:
         print(f"Error: {e}")
