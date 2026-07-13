@@ -1,43 +1,55 @@
 import requests
+from bs4 import BeautifulSoup
 import smtplib
 import os
 from email.message import EmailMessage
 
+def send_email(report):
+    msg = EmailMessage()
+    msg['Subject'] = "📊 Tajseed o Tajweed - Gold Rates Report"
+    msg['From'] = "superali001@gmail.com"
+    msg['To'] = "superali001@gmail.com"
+    msg.set_content(report)
+    password = os.environ.get('EMAIL_PASSWORD')
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login("superali001@gmail.com", password)
+        smtp.send_message(msg)
+
 def run():
-    # ہم ویب سائٹ کو ایک اصلی موبائل براؤزر کا دھوکہ دیں گے
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
-    }
-    
     url = "https://gold.pk/"
-    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    }
     try:
-        # ویب سائٹ کو "کھولنا" (Get Request)
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(url, headers=headers, timeout=20)
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # ڈیٹا کو اس کے اصل HTML سے پکڑنا
-        if "Rs." in response.text:
-            # یہاں ہم صرف وہ حصہ ڈھونڈیں گے جہاں ریٹس لکھے ہوتے ہیں
-            start = response.text.find("Gold Rate in Pakistan")
-            data = response.text[start:start+2000] # صرف کام کا حصہ
+        # برانڈ کا نام اور ہیڈر
+        report = "🌟 Tajseed o Tajweed - Gold & Market Rates\n"
+        report += "==========================================\n\n"
+        
+        # آپ کے بھیجے گئے سورس کوڈ کے مطابق 'goldratehome' کلاس سے ڈیٹا اٹھانا
+        rate_elements = soup.find_all('p', class_='goldratehome')
+        
+        if len(rate_elements) >= 3:
+            tola_rate = rate_elements[0].get_text(strip=True)
+            ten_gram_rate = rate_elements[1].get_text(strip=True)
+            one_gram_rate = rate_elements[2].get_text(strip=True)
             
-            # ای میل بھیجنا
-            msg = EmailMessage()
-            msg['Subject'] = "📊 Tajseed o Tajweed - Gold Rates"
-            msg['From'] = "superali001@gmail.com"
-            msg['To'] = "superali001@gmail.com"
-            msg.set_content("آج کا ریٹ:\n\n" + data)
-            
-            password = os.environ.get('EMAIL_PASSWORD')
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                smtp.login("superali001@gmail.com", password)
-                smtp.send_message(msg)
-            print("ڈیٹا ریڈ کر کے ای میل کر دیا گیا ہے!")
+            # خوبصورت اور صاف ستھرا ٹیبل فارمیٹ
+            report += f"{'وزن / کیرٹ (24K)':<20} | {'قیمت (Rs.)':<15}\n"
+            report += "-" * 40 + "\n"
+            report += f"{'1 Tola (تولہ)':<20} | {tola_rate:<15}\n"
+            report += f"{'10 Gram (گرام)':<20} | {ten_gram_rate:<15}\n"
+            report += f"{'1 Gram (گرام)':<20} | {one_gram_rate:<15}\n"
         else:
-            print("ویب سائٹ نے ڈیٹا نہیں دیا، صرف HTML ملا ہے۔")
+            report += "⚠️ ویب سائٹ کا ڈھانچہ تبدیل ہوا ہے یا ڈیٹا دستیاب نہیں ہے۔\n"
+            
+        report += "\n------------------------------------------\n"
+        report += "تازہ ترین ریٹس: Gold.pk سے حاصل کردہ۔"
+        
+        send_email(report)
+        print("رپورٹ کامیابی سے بھیج دی گئی ہے۔")
             
     except Exception as e:
         print(f"Error: {e}")
