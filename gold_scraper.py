@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+import re
 import smtplib
 import os
 from email.message import EmailMessage
@@ -20,33 +20,30 @@ def run():
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         response = requests.get(url, headers=headers, timeout=20)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        content = response.text
         
-        # برانڈ کا نام
         report = "🌟 Tajseed o Tajweed - Gold & Market Rates\n"
         report += "==========================================\n\n"
-        
-        # ٹیبل ہیڈر
         report += f"{'شہر':<12} | {'بڈنگ (Rs.)':<12} | {'آسکنگ (Rs.)':<12}\n"
         report += "-" * 40 + "\n"
 
-        # ویب سائٹ پر موجود تمام ٹیبل روز (rows) کو تلاش کرنا
-        for row in soup.find_all('tr'):
-            cols = row.find_all('td')
-            # اگر رو میں 4 کالم ہیں (شہر، سمبل، بڈنگ، آسکنگ)
-            if len(cols) >= 4:
-                city = cols[0].get_text(strip=True).replace("Gold Rate in ", "")
-                bidding = cols[2].get_text(strip=True)
-                asking = cols[3].get_text(strip=True)
-                
-                # صرف ان رو کو لیں جن میں ریٹس ہیں (عدد موجود ہوں)
-                if bidding.isdigit() and asking.isdigit():
-                    report += f"{city:<12} | {bidding:<12} | {asking:<12}\n"
+        # Regex پیٹرن جو ویب سائٹ کے سورس کوڈ سے ریٹس نکالے گا
+        # یہ پیٹرن: "Gold Rate in CityName" کے بعد آنے والے نمبرز پکڑتا ہے
+        pattern = r"Gold Rate in (.*?)\s*</td>.*?<td>.*?</td>.*?<td>(.*?)</td>.*?<td>(.*?)</td>"
+        matches = re.findall(pattern, content, re.DOTALL)
+
+        for match in matches:
+            city = match[0].strip()
+            bidding = match[1].strip()
+            asking = match[2].strip()
+            # صرف اہم شہروں کو فلٹر کرنا
+            if city in ["Karachi", "Lahore", "Islamabad", "Quetta", "Peshawar"]:
+                report += f"{city:<12} | {bidding:<12} | {asking:<12}\n"
 
         report += "\nتازہ ترین ریٹس: Gold.pk سے حاصل کردہ۔"
         
         send_email(report)
-        print("ٹیبل فارمیٹ میں رپورٹ بھیج دی گئی ہے۔")
+        print("رپورٹ کامیابی سے بھیج دی گئی ہے۔")
             
     except Exception as e:
         print(f"Error: {e}")
